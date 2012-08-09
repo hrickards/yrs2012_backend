@@ -5,6 +5,7 @@ GEM
     bson_ext (1.6.4)
       bson (~> 1.6.4)
     builder (3.0.0)
+    crack (0.3.1)
     daemons (1.1.8)
     eventmachine (0.12.10)
     fast-stemmer (1.0.1)
@@ -37,6 +38,7 @@ PLATFORMS
 
 DEPENDENCIES
   bson_ext
+  crack
   fast-stemmer
   json
   mongo
