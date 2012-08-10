@@ -188,6 +188,8 @@ task :insert_health_ratings do
     place["allergies"] = allergy_ratings unless place["allergies"]
     place["logo"] = guess_icon place
 
+    place["rating_value"] = place["rating_value"].to_f if place["rating_value"]
+
 
     place =  magic_fix Hash[place.select { |key, value| not (key == "_id" or value.nil? or (value.is_a? String and value.empty?)) }]
     @collection.insert place
@@ -212,16 +214,17 @@ task :index do
   @collection.ensure_index [["machine_location", Mongo::GEO2D]]
 end
 
-task :rating_value_to_f do
-  uri  = URI.parse(ENV['MONGOLAB_URI'])
-  @connection = Mongo::Connection.from_uri(ENV['MONGOLAB_URI'])
-  @db = @connection.db(uri.path.gsub(/^\//, ''))
-  @collection = @db['places']
+#task :rating_value_to_f do
+  #uri  = URI.parse(ENV['MONGOLAB_URI'])
+  #@connection = Mongo::Connection.from_uri(ENV['MONGOLAB_URI'])
+  #@db = @connection.db(uri.path.gsub(/^\//, ''))
+  #@collection = @db['places']
 
-  @collection.find.each do |place|
-    place.update 'rating_value' => place['rating_value'].to_i
-  end
-end
+  #@collection.find.each do |place|
+    #place.update 'rating_value' => place['rating_value'].to_i
+  #end
+#end
 
-task :default => [:download_health_ratings, :insert_health_ratings, :index, :rating_value_to_f] do
+#task :default => [:download_health_ratings, :insert_health_ratings, :index, :rating_value_to_f] do
+task :default => [:download_health_ratings, :insert_health_ratings, :index] do
 end
