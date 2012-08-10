@@ -212,5 +212,16 @@ task :index do
   @collection.ensure_index [["machine_location", Mongo::GEO2D]]
 end
 
+task :rating_value_to_f do
+  uri  = URI.parse(ENV['MONGOLAB_URI'])
+  @connection = Mongo::Connection.from_uri(ENV['MONGOLAB_URI'])
+  @db = @connection.db(uri.path.gsub(/^\//, ''))
+  @collection = @db['places']
+
+  @collection.find.each do |place|
+    place.update { 'rating_value' => place['rating_value'].to_f }
+    raise place.inspect
+end
+
 task :default => [:download_health_ratings, :insert_health_ratings, :index] do
 end
