@@ -221,6 +221,7 @@ task :rating_value_to_f do
   @collection.find.each do |place|
     place.update 'rating_value' => place['rating_value'].to_f
     raise place.inspect
+  end
 end
 
 task :default => [:download_health_ratings, :insert_health_ratings, :index, :rating_value_to_f] do
