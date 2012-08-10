@@ -48,6 +48,8 @@ class PlaceSearch
     old_filters = query[:filters]
     query.merge! parse_criteria(criteria)
     query[:filters] += old_filters if query[:filters] and old_filters
+
+    query[:takeaway] = true if words.inject (false) { |result, object| result or (approx_includes ["take", "takeaway", "take-away", "away"].map { |w| w.stem }, object) }
     
     query
   end
@@ -58,6 +60,7 @@ class PlaceSearch
       query = {}
 
       query[:logo] = old_query[:type] if old_query[:type]
+      query[:types] = 'meal_takeaway' if old_query[:takeaway]
 
       old_query[:filters].each do |filter_name|
         query.merge! (case filter_name
@@ -75,8 +78,8 @@ class PlaceSearch
       query.merge! create_location_criteria(old_query[:location]) if old_query[:location]
 
       query
-    rescue Exception
-      {}
+    #rescue Exception
+      #{}
     end
   end
 
