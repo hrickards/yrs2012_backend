@@ -80,6 +80,14 @@ class PlaceSearch
     end
   end
 
+  def self.create_location_criteria_from_coordinates(lat, lng)
+    { 'machine_location' =>
+      {
+        '$near' => [lat, lng]
+      }
+    }
+  end
+
   protected
   def self.parse_criteria(criteria)
     return {} if criteria.empty?
@@ -118,11 +126,7 @@ class PlaceSearch
 
     if response["status"] == "OK"
       details = response["results"].first["geometry"]["location"]
-      { 'machine_location' =>
-        {
-          '$near' => [details["lng"], details["lat"]]
-        }
-      }
+      create_location_criteria_from_coordinates details["lng"], details["lat"]
     else
       {}
     end

@@ -11,11 +11,25 @@ class FUDBackend < Sinatra::Base
     results = PlaceSearch.search_wrapper query
     is_me = results['location']
     results.delete 'location'
-    
-    referer = request.referer or "http://localhost:8888/yrs2012/"
-    redirect "#{referer}?s=#{URI.encode(query)}&q=#{URI.encode(results.to_json)}&me=#{is_me}"
+
+    redirect_base = (request.referer or 'http://localhost:8888/yrs2012/')
+
+    if is_me
+      @redirect_to_url = "/geolocate_callback?search=#{URI.encode(query)}&query=#{URI.encode(results.to_json)}&redirect_base=#{URI.encode(redirect_base)}"
+
+      erb :geolocate
+    else
+      redirect "#{redirect_base}?s=#{URI.encode(query)}&q=#{URI.encode(results.to_json)}&me=#{is_me}"
+    end
   end
-  
+
+  get '/geolocate_callback' do
+    query = JSON.parse params[:query]
+    query.merge! PlaceSearch.create_location_criteria_from_coordinates params[:longitude], params[:latitude]
+
+    redirect "#{params[:redirect_base]}?s=#{URI.encode(params[:search])}&q=#{URI.encode(query.to_json)}&me=true"
+  end
+
   get '/search' do
     results = PlaceSearch.search_wrapper(params[:query])
     results.delete 'location'
