@@ -5,6 +5,15 @@ Bundler.require :default
 require_relative 'search'
 require_relative 'mobile'
 
+def parse_referer(r)
+  s = r.split '/'
+  if s.last[0] == '?'
+    s[0..-2].join '/'
+  else
+    r
+  end
+end
+
 class FUDBackend < Sinatra::Base
   post '/search' do
     query = params[:query]
@@ -12,7 +21,7 @@ class FUDBackend < Sinatra::Base
     is_me = results['location']
     results.delete 'location'
 
-    redirect_base = (request.referer or 'http://localhost:8888/yrs2012/')
+    redirect_base = (parse_referer(request.referer) or 'http://localhost:8888/yrs2012/')
 
     if is_me
       @redirect_to_url = "/geolocate_callback?search=#{URI.encode(query)}&query=#{URI.encode(results.to_json)}&redirect_base=#{URI.encode(redirect_base)}"
