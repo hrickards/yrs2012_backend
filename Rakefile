@@ -219,8 +219,7 @@ task :rating_value_to_f do
   @collection = @db['places']
 
   @collection.find.each do |place|
-    place.update 'rating_value' => place['rating_value'].to_f
-    raise place.inspect
+    place.update 'rating_value' => place['rating_value'].to_i
   end
 end
 
