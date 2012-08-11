@@ -78,8 +78,8 @@ class PlaceSearch
       query.merge! create_location_criteria(old_query[:location]) if old_query[:location]
 
       query
-    #rescue Exception
-      #{}
+    rescue Exception
+      {}
     end
   end
 
