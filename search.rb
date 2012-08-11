@@ -83,6 +83,26 @@ class PlaceSearch
     end
   end
 
+  def self.params_search_wrapper(params)
+    query = {}
+    params.each do |name, value|
+      query.merge! case name.to_s
+      when 'query'
+        search_wrapper value
+      when 'type'
+        {:logo => value}
+      when 'price'
+        {}
+      when 'allergies'
+        {"allergies.#{value}" => {'$lt' => 3}}
+      else
+        {}
+      end
+    end
+
+    query
+  end
+
   def self.create_location_criteria_from_coordinates(lat, lng)
     { 'machine_location' =>
       {
