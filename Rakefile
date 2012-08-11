@@ -7,8 +7,7 @@ require 'open-uri'
 require 'uri'
 require 'progressbar'
 
-XML_URL = "http://ratings.food.gov.uk/OpenDataFiles/FHRS875en-GB.xml"
-XML_PATH = "/tmp/FHRS875en-GB.xml"
+XML_URLS = ["http://ratings.food.gov.uk/OpenDataFiles/FHRS308en-GB.xml", "http://ratings.food.gov.uk/OpenDataFiles/FHRS875en-GB.xml"]
 ACCEPTABLE_TYPES = ["Take-Away", "Restaurant/Cafe/Canteen", "Pub/Club"]
 
 def to_string_array(string)
@@ -140,7 +139,7 @@ def random_review
   end
 
 task :download_health_ratings do
-  File.open(XML_PATH, 'wb') { |f| f.write open(XML_URL).read }
+  XML_URLS.each { |u| File.open("/tmp/#{u.split('/').last}", 'wb') { |f| f.write open(u).read } }
 end
 
 task :insert_health_ratings do
@@ -150,53 +149,56 @@ task :insert_health_ratings do
   @collection = @db['places']
   @collection.remove
 
-  parsed_xml = Crack::XML.parse(open(XML_PATH))["FHRSEstablishment"]["EstablishmentCollection"]["EstablishmentDetail"]
+  XML_URLS.each do |url|
+    path = url.split('/').last
 
-  pbar = ProgressBar.new 'Importing:', parsed_xml.length
-  parsed_xml.each do |place|
-    next unless place["Geocode"] and place_is_acceptable place
-    place["location"] = 
-      {
-        :latitude => place["Geocode"]["Latitude"],
-        :longitude => place["Geocode"]["Longitude"]
-      }
-    place['machine_location'] = [place["Geocode"]["Latitude"].to_f, place["Geocode"]["Longitude"].to_f]
-    place.delete "Geocode"
+    parsed_xml = Crack::XML.parse(open(path))["FHRSEstablishment"]["EstablishmentCollection"]["EstablishmentDetail"]
 
-    key = 'AIzaSyA4_MbXZb7jP5e9luRnPZRzZuvJOMyRuVM'
-    location = place['machine_location'].reverse.join ','
-    sensor = false
-    rankby = 'distance'
-    keyword = URI.escape place["AddressLine1"]
-    base = "https://maps.googleapis.com/maps/api/place/search/json"
+    pbar = ProgressBar.new "#{path}: ", parsed_xml.length
+    parsed_xml.each do |place|
+      next unless place["Geocode"] and place_is_acceptable place
+      place["location"] = 
+        {
+          :latitude => place["Geocode"]["Latitude"],
+          :longitude => place["Geocode"]["Longitude"]
+        }
+      place['machine_location'] = [place["Geocode"]["Latitude"].to_f, place["Geocode"]["Longitude"].to_f]
+      place.delete "Geocode"
 
-    url = "#{base}?key=#{key}&location=#{location}&sensor=#{sensor}&rankby=#{rankby}&keyword=#{keyword}"
-    response = JSON.parse open(url).read
-    next unless response["status"] == "OK"
+      key = 'AIzaSyA4_MbXZb7jP5e9luRnPZRzZuvJOMyRuVM'
+      location = place['machine_location'].reverse.join ','
+      sensor = false
+      rankby = 'distance'
+      keyword = URI.escape place["AddressLine1"]
+      base = "https://maps.googleapis.com/maps/api/place/search/json"
 
-    reference = response["results"].first["reference"]
-    base = "https://maps.googleapis.com/maps/api/place/details/json"
-    
-    url = "#{base}?key=#{key}&sensor=#{sensor}&reference=#{reference}"
-    details_response = JSON.parse open(url).read
-    next unless details_response["status"] == "OK"
+      url = "#{base}?key=#{key}&location=#{location}&sensor=#{sensor}&rankby=#{rankby}&keyword=#{keyword}"
+      response = JSON.parse open(url).read
+      next unless response["status"] == "OK"
 
-    place.merge! details_response["result"]
+      reference = response["results"].first["reference"]
+      base = "https://maps.googleapis.com/maps/api/place/details/json"
+      
+      url = "#{base}?key=#{key}&sensor=#{sensor}&reference=#{reference}"
+      details_response = JSON.parse open(url).read
+      next unless details_response["status"] == "OK"
 
-    place["reviews"] = (0..(Random.rand(10)+1)).map { |f| random_review } unless place["reviews"]
-    place["coupons"] = (0..(Random.rand(2)+1)).map { |f| random_coupon } unless place["coupons"]
-    place["allergies"] = allergy_ratings unless place["allergies"]
-    place["logo"] = guess_icon place
+      place.merge! details_response["result"]
 
-    place["rating_value"] = place["rating_value"].to_f if place["rating_value"]
+      place["reviews"] = (0..(Random.rand(10)+1)).map { |f| random_review } unless place["reviews"]
+      place["coupons"] = (0..(Random.rand(2)+1)).map { |f| random_coupon } unless place["coupons"]
+      place["allergies"] = allergy_ratings unless place["allergies"]
+      place["logo"] = guess_icon place
+
+      place["rating_value"] = place["rating_value"].to_f if place["rating_value"]
 
 
-    place =  magic_fix Hash[place.select { |key, value| not (key == "_id" or value.nil? or (value.is_a? String and value.empty?)) }]
-    @collection.insert place
-    pbar.inc
+      place =  magic_fix Hash[place.select { |key, value| not (key == "_id" or value.nil? or (value.is_a? String and value.empty?)) }]
+      @collection.insert place
+      pbar.inc
+    end
+    pbar.finish
   end
-
-  pbar.finish
 end
 
 task :index do
