@@ -94,7 +94,7 @@ class PlaceSearch
       when 'price'
         {}
       when 'allergies'
-        {"allergies.#{value}" => {'$lt' => 3}}
+        value.empty? ? {} : {"allergies.#{value}" => {'$lt' => 3}}
       else
         {}
       end
