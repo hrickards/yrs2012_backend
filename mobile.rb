@@ -43,26 +43,23 @@ EOF
 EOF
   end
 
-  def self.handle_voice(recording_url)
-    fork { transcode_voice recording_url }
+  def self.handle_voice(recording_url, to, from)
+    fork { transcode_voice recording_url, to, from}
 
     <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say>Please wait while we process your results.</Say>
-  <Pause length="3" />
-  <Redirect method="GET">/handle_transcoding</Redirect>
+  <Say>You should receive a text shortly.</Say>
 </Response>
 EOF
   end
 
   protected
-  def self.transcode_voice(url)
-    `#{Dir.pwd}/parse_audio "#{url}"`
-  end
+  def self.transcode_voice(url, to, from)
+    base_api_url = "http://178.79.184.102:9999/"
+    api_url = "#{base_api_url}?url=#{URI.escape url}"
 
-  def self.handle_transcoding(to, from)
-    query = JSON.parse(File.open('/tmp/response.json').read)['hypotheses'].first['utterance']
+    query = JSON.parse(open(api_url).read)['hypotheses'].first['utterance']
     query = PlaceSearch.search_wrapper query
 
     uri  = URI.parse(ENV['MONGOLAB_URI'])
@@ -76,12 +73,5 @@ EOF
     @client = Twilio::REST::Client.new 'AC098c9055bcafb93b7f7d9696676cf05d', '2c49b08f33d8ba0d3781abead2a3459a'
     @client.account.sms.messages.create :from => from, :to => to, :body => (header + results[0..1].join("\n"))
     @client.account.sms.messages.create :from => from, :to => to, :body => (results[2..-1].join "\n")
-
-    <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say>You should receive a text message with results soon.</Say>
-</Response>
-EOF
   end
 end
