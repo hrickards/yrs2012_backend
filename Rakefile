@@ -173,7 +173,7 @@ task :insert_health_ratings do
           puts "Skipping - no address"
           next
         end
-        keyword = URI.escape(place["AddressLine1"]
+        keyword = URI.escape place["AddressLine1"]
         base = "https://maps.googleapis.com/maps/api/place/search/json"
 
         url = "#{base}?key=#{key}&location=#{location}&sensor=#{sensor}&rankby=#{rankby}&keyword=#{keyword}"
