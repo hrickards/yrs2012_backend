@@ -17,8 +17,7 @@ end
 
 class FUDBackend < Sinatra::Base
   post '/search' do
-    query = params[:query]
-    #results = PlaceSearch.search_wrapper query
+    query = params[:query] || ""
     results = PlaceSearch.params_search_wrapper params
     is_me = results['location']
     results.delete 'location'

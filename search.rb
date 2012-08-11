@@ -99,7 +99,7 @@ class PlaceSearch
         if value == 'take'
           {:types => 'meal_takeaway'}
         elsif value == 'eat'
-          {:types => {'$not' => 'meal_takeaway'}}
+          {:types => {'$ne' => 'meal_takeaway'}}
         else
           {}
         end
