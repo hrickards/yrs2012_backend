@@ -150,7 +150,7 @@ task :insert_health_ratings do
   @collection.remove
 
   XML_URLS.each do |url|
-    path = url.split('/').last
+    path = "/tmp/#{url.split('/').last}"
 
     parsed_xml = Crack::XML.parse(open(path))["FHRSEstablishment"]["EstablishmentCollection"]["EstablishmentDetail"]
 
