@@ -90,7 +90,7 @@ class PlaceSearch
       when 'query'
         search_wrapper value
       when 'type'
-        {:logo => value}
+        {:logo => value} unless value == 'any'
       when 'price'
         {}
       when 'allergies'
