@@ -59,6 +59,10 @@ EOF
     base_api_url = "http://178.79.184.102:9999/"
     api_url = "#{base_api_url}?url=#{URI.escape url}"
 
+    puts api_url.inspect
+    puts open(api_url).read.inspect
+    puts JSON.parse(open(api_url).read).inspect
+
     query = JSON.parse(open(api_url).read)['hypotheses'].first['utterance']
     query = PlaceSearch.search_wrapper query
 
