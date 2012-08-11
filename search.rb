@@ -95,6 +95,14 @@ class PlaceSearch
         {}
       when 'allergies'
         value.empty? ? {} : {"allergies.#{value}" => {'$lt' => 3}}
+      when 'eatin'
+        if value == 'take'
+          {:types => 'meal_takeaway'}
+        elsif value == 'eat'
+          {:types => {'$not' => 'meal_takeaway'}}
+        else
+          {}
+        end
       else
         {}
       end
