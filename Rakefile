@@ -7,9 +7,8 @@ require 'open-uri'
 require 'uri'
 require 'progressbar'
 
-XML_URLS = ["http://ratings.food.gov.uk/OpenDataFiles/FHRS308en-GB.xml", "http://ratings.food.gov.uk/OpenDataFiles/FHRS875en-GB.xml"]
+XML_URLS = ['http://ratings.food.gov.uk/OpenDataFiles/FHRS308en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS875en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS145en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS287en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS407en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS288en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS289en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS148en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS290en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS317en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS318en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS149en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS319en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS423en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS708en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS291en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS292en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS293en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS880en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS295en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS900en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS433en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS321en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS151en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS152en-GB.xml', 'http://ratings.food.gov.uk/OpenDataFiles/FHRS153en-GB.xml']
 ACCEPTABLE_TYPES = ["Take-Away", "Restaurant/Cafe/Canteen", "Pub/Club"]
-
 def to_string_array(string)
   stop_words = %w{and after caterers other}
   string.select { |f| not f.nil? }.map { |f| f.split(" ") }.flatten.map { |f| f.downcase.split(//).select { |s| s =~ /[a-zA-Z]/}.join }.select { |f| not (f.nil? or f.empty? or stop_words.include? f) }
