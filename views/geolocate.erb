@@ -1,7 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script type="text/javascript" src="http://secure-plateau-7940.herokuapp.com/js/jquery.js"></script> 
+<script type="text/javascript" src="http://secure-plateau-7940.herokuapp.com/js/jquery.cookie.js"></script> 
+<script type="text/javascript" src="http://secure-plateau-7940.herokuapp.com/js/jquery-ui.js"></script>
+<script type="text/javascript">
+  function updateResizeDiv() {
+    var mapwidther = $(window).width();
+    var mapheighter = $(window).height();
+    $('#introbox').css('width',mapwidther);
+    $('#introbox').css('left',$('#comparebox').width());
+    $('#introbox').css('height',mapheighter);
+    $('#introbox_inner').css('left',((mapwidther/2)-($('#introbox_inner').width()/2)));
+    $('#introbox_inner').css('top',((mapheighter/2)-($('#introbox_inner').height()/2)));
+  }
+
+  function init_jsfud() {
+    $("#introbox").fadeIn();  updateResizeDiv();
+    $('#introbox_inner').delay(800).fadeIn();
+  }
+
+  $(window).resize(updateResizeDiv);
+</script>
+
 <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.1/modernizr.min.js"></script>
 <script type="text/javascript">
   function get_location() {
@@ -22,7 +44,20 @@
     get_location();
   });
 </script>
+<title>FUD</title>
 </head>
-<body>
+<body onload="init_jsfud();">
+<div id = "introbox" style="display:none;">
+  <div id = "introbox_inner" style="position:relative;" class="intro_box">
+    <img id="close_intro_button" ></img>
+    
+    <div style="width:100%; text-align:center;">
+      <img src="http://secure-plateau-7940.herokuapp.com/img/fud_logo_large.png" ><br />
+      <font id="explanation_box">
+        Geolocating you now...
+      </font>
+    </div>
+  </div>
+</div>
 </body>
 </html>
