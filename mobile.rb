@@ -43,38 +43,45 @@ EOF
 EOF
   end
 
-  def self.handle_voice(recording_url, to, from)
-    fork { send_voice_result recording_url, to, from}
+  def self.handle_voice(recording_url)
+    fork { transcode_voice recording_url }
 
     <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say>
-    Thank you. You will shortly get a text with results.
-  </Say>
+  <Say>Please wait while we process your results.</Say>
+  <Pause length="3" />
+  <Redirect method="GET">/handle_transcoding</Redirect>
 </Response>
 EOF
   end
 
   protected
-  def self.send_voice_result(url, from, to)
-    query = JSON.parse(`#{File.expand_path(File.dirname(File.dirname(__FILE__)))}/parse_audio "#{url}"`)['hypotheses'].first['utterance']
-    puts query.inspect
+  def self.transcode_voice(url)
+    `#{Dir.pwd}/parse_audio "#{url}"`
+  end
+
+  def self.handle_transcoding(to, from)
+    query = JSON.parse(File.open('/tmp/response.json').read)['hypotheses'].first['utterance']
     query = PlaceSearch.search_wrapper query
-    humanised_query = "#{query[:logo]} ".gsub('_', ' ') if query[:logo]
-    header = "FUD found you these #{humanised_query}restaurants:\n"
 
     uri  = URI.parse(ENV['MONGOLAB_URI'])
     @connection = Mongo::Connection.from_uri(ENV['MONGOLAB_URI'])
     @db = @connection.db(uri.path.gsub(/^\//, ''))
     @collection = @db['places']
     results = @collection.find(query).limit(5)
-
+    
     results = results.map { |p| "#{p["business_name"]}, near #{p["address_line1"]}" }
-
 
     @client = Twilio::REST::Client.new 'AC098c9055bcafb93b7f7d9696676cf05d', '2c49b08f33d8ba0d3781abead2a3459a'
     @client.account.sms.messages.create :from => from, :to => to, :body => (header + results[0..1].join("\n"))
     @client.account.sms.messages.create :from => from, :to => to, :body => (results[2..-1].join "\n")
+
+    <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say>You should receive a text message with results soon.</Say>
+</Response>
+EOF
   end
 end

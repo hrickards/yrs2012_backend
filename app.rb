@@ -58,6 +58,11 @@ class FUDBackend < Sinatra::Base
 
   get '/handle_voice' do
     content_type :xml
-    MobileSearch.handle_voice params["RecordingUrl"], params["To"], params["From"]
+    MobileSearch.handle_voice params["RecordingUrl"]
+  end
+
+  get '/handle_transcoding' do
+    content_type :xml
+    MobileSearch.handle_transcoding params["To"], params["From"]
   end
 end
