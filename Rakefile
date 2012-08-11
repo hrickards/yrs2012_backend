@@ -155,46 +155,54 @@ task :insert_health_ratings do
 
     pbar = ProgressBar.new "#{path}: ", parsed_xml.length
     parsed_xml.each do |place|
-      next unless place["Geocode"] and place_is_acceptable place
-      place["location"] = 
-        {
-          :latitude => place["Geocode"]["Latitude"],
-          :longitude => place["Geocode"]["Longitude"]
-        }
-      place['machine_location'] = [place["Geocode"]["Latitude"].to_f, place["Geocode"]["Longitude"].to_f]
-      place.delete "Geocode"
+      begin
+        next unless place["Geocode"] and place_is_acceptable place
+        place["location"] = 
+          {
+            :latitude => place["Geocode"]["Latitude"],
+            :longitude => place["Geocode"]["Longitude"]
+          }
+        place['machine_location'] = [place["Geocode"]["Latitude"].to_f, place["Geocode"]["Longitude"].to_f]
+        place.delete "Geocode"
 
-      key = 'AIzaSyA4_MbXZb7jP5e9luRnPZRzZuvJOMyRuVM'
-      location = place['machine_location'].reverse.join ','
-      sensor = false
-      rankby = 'distance'
-      keyword = URI.escape place["AddressLine1"]
-      base = "https://maps.googleapis.com/maps/api/place/search/json"
+        key = 'AIzaSyA4_MbXZb7jP5e9luRnPZRzZuvJOMyRuVM'
+        location = place['machine_location'].reverse.join ','
+        sensor = false
+        rankby = 'distance'
+        if place['AddressLine1'].nil? or place['AddressLine1'].empty?
+          puts "Skipping - no address"
+          next
+        end
+        keyword = URI.escape(place["AddressLine1"]
+        base = "https://maps.googleapis.com/maps/api/place/search/json"
 
-      url = "#{base}?key=#{key}&location=#{location}&sensor=#{sensor}&rankby=#{rankby}&keyword=#{keyword}"
-      response = JSON.parse open(url).read
-      next unless response["status"] == "OK"
+        url = "#{base}?key=#{key}&location=#{location}&sensor=#{sensor}&rankby=#{rankby}&keyword=#{keyword}"
+        response = JSON.parse open(url).read
+        next unless response["status"] == "OK"
 
-      reference = response["results"].first["reference"]
-      base = "https://maps.googleapis.com/maps/api/place/details/json"
-      
-      url = "#{base}?key=#{key}&sensor=#{sensor}&reference=#{reference}"
-      details_response = JSON.parse open(url).read
-      next unless details_response["status"] == "OK"
+        reference = response["results"].first["reference"]
+        base = "https://maps.googleapis.com/maps/api/place/details/json"
+        
+        url = "#{base}?key=#{key}&sensor=#{sensor}&reference=#{reference}"
+        details_response = JSON.parse open(url).read
+        next unless details_response["status"] == "OK"
 
-      place.merge! details_response["result"]
+        place.merge! details_response["result"]
 
-      place["reviews"] = (0..(Random.rand(10)+1)).map { |f| random_review } unless place["reviews"]
-      place["coupons"] = (0..(Random.rand(2)+1)).map { |f| random_coupon } unless place["coupons"]
-      place["allergies"] = allergy_ratings unless place["allergies"]
-      place["logo"] = guess_icon place
+        place["reviews"] = (0..(Random.rand(10)+1)).map { |f| random_review } unless place["reviews"]
+        place["coupons"] = (0..(Random.rand(2)+1)).map { |f| random_coupon } unless place["coupons"]
+        place["allergies"] = allergy_ratings unless place["allergies"]
+        place["logo"] = guess_icon place
 
-      place["rating_value"] = place["rating_value"].to_f if place["rating_value"]
+        place["rating_value"] = place["rating_value"].to_f if place["rating_value"]
 
 
-      place =  magic_fix Hash[place.select { |key, value| not (key == "_id" or value.nil? or (value.is_a? String and value.empty?)) }]
-      @collection.insert place
-      pbar.inc
+        place =  magic_fix Hash[place.select { |key, value| not (key == "_id" or value.nil? or (value.is_a? String and value.empty?)) }]
+        @collection.insert place
+        pbar.inc
+      rescue Exception => e
+        puts "Error #{e}"
+      end
     end
     pbar.finish
   end
